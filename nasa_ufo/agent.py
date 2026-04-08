@@ -14,6 +14,7 @@ from typing import Any
 
 import requests
 
+from nasa_ufo.renderer import render
 from nasa_ufo.tools import NASAToolkit
 
 
@@ -77,10 +78,12 @@ class MissionAgent:
     def run_apod(self, date: str | None = None) -> MissionResult:
         """Execute an APOD mission."""
         data = self.toolkit.apod(date=date)
-        summary = (
-            f"🌠 APOD — {data.get('title', 'Unknown')} ({data.get('date', '')})\n"
-            f"   {data.get('explanation', '')[:300]}…\n"
-            f"   🔗 {data.get('url', '')}"
+        summary = render(
+            "apod.txt",
+            title=data.get("title", "Unknown"),
+            date=data.get("date", ""),
+            explanation=data.get("explanation", ""),
+            url=data.get("url", ""),
         )
         return MissionResult("apod", "apod", data, summary)
 
@@ -91,14 +94,20 @@ class MissionAgent:
         data = self.toolkit.neo(start_date=start_date, end_date=end_date)
         count = data.get("element_count", 0)
         neos = data.get("near_earth_objects", {})
-        lines = [f"☄️  {count} near-Earth objects detected:"]
-        for date_str, objects in list(neos.items())[:3]:
-            lines.append(f"  📅 {date_str}: {len(objects)} object(s)")
-            for obj in objects[:2]:
-                name = obj.get("name", "Unknown")
-                hazardous = "⚠️  POTENTIALLY HAZARDOUS" if obj.get("is_potentially_hazardous_asteroid") else "✅ safe"
-                lines.append(f"     • {name} — {hazardous}")
-        summary = "\n".join(lines)
+        dates = [
+            (
+                date_str,
+                [
+                    {
+                        "name": obj.get("name", "Unknown"),
+                        "hazardous": obj.get("is_potentially_hazardous_asteroid", False),
+                    }
+                    for obj in objects
+                ],
+            )
+            for date_str, objects in list(neos.items())[:3]
+        ]
+        summary = render("neo.txt", count=count, dates=dates)
         return MissionResult("neo", "neo", data, summary)
 
     def run_mars_photos(
@@ -110,12 +119,20 @@ class MissionAgent:
         """Execute a Mars Rover photo browsing mission."""
         data = self.toolkit.mars_photos(rover=rover, sol=sol, camera=camera)
         photos = data.get("photos", [])
-        lines = [f"🔴 {rover.title()} — sol {sol}: {len(photos)} photo(s) found"]
-        for photo in photos[:5]:
-            cam = photo.get("camera", {}).get("full_name", "Unknown")
-            url = photo.get("img_src", "")
-            lines.append(f"   📷 {cam}: {url}")
-        summary = "\n".join(lines)
+        photo_items = [
+            {
+                "camera": p.get("camera", {}).get("full_name", "Unknown"),
+                "url": p.get("img_src", ""),
+            }
+            for p in photos
+        ]
+        summary = render(
+            "mars_photos.txt",
+            rover=rover.title(),
+            sol=sol,
+            total=len(photos),
+            photos=photo_items,
+        )
         return MissionResult("mars_photos", "mars_photos", data, summary)
 
     def run_earth_imagery(
@@ -124,10 +141,12 @@ class MissionAgent:
         """Execute an Earth satellite imagery mission."""
         data = self.toolkit.earth_imagery(lat=lat, lon=lon, date=date)
         url = data.get("url", data.get("resource", {}).get("dataset", ""))
-        summary = (
-            f"🌍 Earth imagery at ({lat}, {lon})\n"
-            f"   Date: {data.get('date', 'N/A')}\n"
-            f"   🔗 {url}"
+        summary = render(
+            "earth_imagery.txt",
+            lat=lat,
+            lon=lon,
+            date=data.get("date", "N/A"),
+            url=url,
         )
         return MissionResult("earth_imagery", "earth_imagery", data, summary)
 
@@ -135,12 +154,16 @@ class MissionAgent:
         """Execute an EPIC Earth imagery mission."""
         data = self.toolkit.epic(collection=collection)
         items = data if isinstance(data, list) else []
-        lines = [f"🌏 EPIC {collection} — {len(items)} image(s) available"]
-        for item in items[:3]:
-            name = item.get("image", "")
-            date = item.get("date", "")
-            lines.append(f"   📸 {name}  ({date})")
-        summary = "\n".join(lines)
+        epic_items = [
+            {"name": item.get("image", ""), "date": item.get("date", "")}
+            for item in items
+        ]
+        summary = render(
+            "epic.txt",
+            collection=collection,
+            total=len(items),
+            items=epic_items,
+        )
         return MissionResult("epic", "epic", data, summary)
 
 

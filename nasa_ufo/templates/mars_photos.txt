@@ -1,0 +1,4 @@
+🔴 {{ rover }} — sol {{ sol }}: {{ total }} photo(s) found
+{%- for photo in photos[:5] %}
+   📷 {{ photo.camera }}: {{ photo.url }}
+{%- endfor %}

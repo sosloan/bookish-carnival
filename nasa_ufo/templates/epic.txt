@@ -1,0 +1,4 @@
+🌏 EPIC {{ collection }} — {{ total }} image(s) available
+{%- for item in items[:3] %}
+   📸 {{ item.name }}  ({{ item.date }})
+{%- endfor %}
