@@ -1,0 +1,3 @@
+🌠 APOD — {{ title }} ({{ date }})
+   {{ explanation[:300] }}…
+   🔗 {{ url }}

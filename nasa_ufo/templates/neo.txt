@@ -1,0 +1,7 @@
+☄️  {{ count }} near-Earth objects detected:
+{%- for date_str, objects in dates %}
+  📅 {{ date_str }}: {{ objects | length }} object(s)
+  {%- for obj in objects[:2] %}
+     • {{ obj.name }} — {% if obj.hazardous %}⚠️  POTENTIALLY HAZARDOUS{% else %}✅ safe{% endif %}
+  {%- endfor %}
+{%- endfor %}

@@ -1,0 +1,3 @@
+🌍 Earth imagery at ({{ lat }}, {{ lon }})
+   Date: {{ date }}
+   🔗 {{ url }}
